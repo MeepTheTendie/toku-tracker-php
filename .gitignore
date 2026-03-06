@@ -1,0 +1,11 @@
+# Database (auto-generated on deploy)
+data/*.db
+
+# Cache
+cache/*
+!cache/.gitkeep
+
+# Local dev
+.vscode/
+.idea/
+*.log
