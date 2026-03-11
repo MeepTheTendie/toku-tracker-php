@@ -10,6 +10,7 @@ require_once __DIR__ . '/lib/TokuTracker.php';
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $path = ltrim($path, '/');
 $path = strtok($path, '?');
+$path = preg_replace('#^toku/#', '', $path);
 
 // API routes
 if (strpos($path, 'api/') === 0) {
