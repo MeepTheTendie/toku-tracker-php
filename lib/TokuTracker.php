@@ -264,6 +264,7 @@ class TokuTracker {
     public static function getNextEpisodeNumber(int $seriesId): int {
         $db = Database::get();
         
+        // First try to find the first unwatched episode
         $stmt = $db->prepare('
             SELECT MIN(e.episode_number) as next_ep
             FROM episodes e
@@ -273,7 +274,17 @@ class TokuTracker {
         $stmt->execute([$seriesId]);
         $result = $stmt->fetchColumn();
         
-        return $result ? (int) $result : 1;
+        // If found, return it; otherwise return total episodes + 1 (all watched)
+        if ($result !== null && $result !== false) {
+            return (int) $result;
+        }
+        
+        // All episodes watched - return episode count + 1
+        $countStmt = $db->prepare('SELECT episodes FROM series WHERE id = ?');
+        $countStmt->execute([$seriesId]);
+        $total = (int) $countStmt->fetchColumn();
+        
+        return $total > 0 ? $total : 1;
     }
     
     /**

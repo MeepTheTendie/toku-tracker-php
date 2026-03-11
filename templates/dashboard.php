@@ -521,7 +521,7 @@
                         EP <?php echo $item['watched_count']; ?> of <?php echo $item['episodes']; ?> watched
                     </div>
                 </div>
-                <div class="next-ep">EP <?php echo $item['next_episode']; ?></div>
+                <div class="next-ep">EP <?php echo htmlspecialchars((string)$item['next_episode']); ?></div>
             </a>
             <?php endforeach; ?>
         </div>

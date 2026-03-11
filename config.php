@@ -5,9 +5,15 @@
  */
 
 // Paths
-define('DATA_DIR', __DIR__ . '/data');
-define('CACHE_DIR', __DIR__ . '/cache');
-define('DB_FILE', DATA_DIR . '/toku.db');
+if (!defined('DATA_DIR')) {
+    define('DATA_DIR', __DIR__ . '/data');
+}
+if (!defined('CACHE_DIR')) {
+    define('CACHE_DIR', __DIR__ . '/cache');
+}
+if (!defined('DB_FILE')) {
+    define('DB_FILE', DATA_DIR . '/toku.db');
+}
 
 // Ensure directories exist
 if (!is_dir(DATA_DIR)) mkdir(DATA_DIR, 0755, true);
@@ -20,7 +26,8 @@ if (!isset($_SESSION['watched'])) {
 }
 
 // Franchise definitions with colors
-const FRANCHISES = [
+if (!defined('FRANCHISES')) {
+    define('FRANCHISES', [
     'kamen_rider' => [
         'name' => 'Kamen Rider',
         'icon' => '🦗',
@@ -55,8 +62,8 @@ const FRANCHISES = [
         'color' => '#f1c40f',
         'bg_gradient' => 'linear-gradient(135deg, #d4ac0d 0%, #f1c40f 100%)',
         'eras' => ['Heisei', 'Reiwa']
-    ]
-];
+    ]]);
+}
 
 /**
  * Complete Tokusatsu Series Database

@@ -436,7 +436,7 @@
                 <?php endif; ?>
                 <div class="series-progress">
                     <div class="progress-bar">
-                        <div class="fill <?php echo $s['status']; ?>" style="width: <?php echo $s['progress']; ?>"></div>
+                        <div class="fill <?php echo $s['status']; ?>" style="width: <?php echo $s['progress']; ?>%"></div>
                     </div>
                     <span class="progress-text"><?php echo $s['watched']; ?>/<?php echo $s['episodes']; ?></span>
                 </div>

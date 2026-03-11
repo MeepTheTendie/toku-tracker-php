@@ -1,1 +1,1 @@
-{"version":2,"defects":[],"times":{"TokuTrackerTest::testGetFranchises":0.001,"TokuTrackerTest::testFranchisesHaveRequiredFields":0,"TokuTrackerTest::testGetStats":0.003,"TokuTrackerTest::testGetFranchiseStats":0}}
+{"version":2,"defects":[],"times":{"TokuTrackerTest::testGetFranchises":0.001,"TokuTrackerTest::testFranchisesHaveRequiredFields":0,"TokuTrackerTest::testGetStats":0.001,"TokuTrackerTest::testGetFranchiseStats":0}}

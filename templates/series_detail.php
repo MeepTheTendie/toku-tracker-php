@@ -245,7 +245,7 @@
                 </div>
                 <div class="series-progress-large">
                     <div class="progress-bar-large">
-                        <div class="fill" style="width: <?php echo $series['progress']; ?>"></div>
+                        <div class="fill" style="width: <?php echo $series['progress']; ?>%"></div>
                     </div>
                     <span class="progress-text-large">
                         <?php echo $series['watched']; ?>/<?php echo $series['episodes']; ?>
