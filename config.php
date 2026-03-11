@@ -4,6 +4,12 @@
  * Complete Tokusatsu Database
  */
 
+// Security headers
+header('X-Frame-Options: DENY');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header("Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self';");
+
 // Paths
 if (!defined('DATA_DIR')) {
     define('DATA_DIR', __DIR__ . '/data');
@@ -19,10 +25,23 @@ if (!defined('DB_FILE')) {
 if (!is_dir(DATA_DIR)) mkdir(DATA_DIR, 0755, true);
 if (!is_dir(CACHE_DIR)) mkdir(CACHE_DIR, 0755, true);
 
+// Session configuration for security
+ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_secure', isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on');
+ini_set('session.cookie_samesite', 'Strict');
+ini_set('session.use_strict_mode', 1);
+
 // Session for user progress
 session_start();
 if (!isset($_SESSION['watched'])) {
     $_SESSION['watched'] = [];
+}
+
+/**
+ * HTML escaping helper to prevent XSS
+ */
+function h($str) {
+    return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
 }
 
 // Franchise definitions with colors
