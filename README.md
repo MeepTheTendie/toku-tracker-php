@@ -28,6 +28,23 @@ Open http://127.0.0.1:8080. Setup prompts securely for a new tracker password an
 stores only its hash in ignored `config.local.php`. Without a configured hash,
 the app refuses access; there is no default password or anonymous bypass.
 
+### Local Docker copy
+
+Docker keeps the app and its SQLite database local to this machine, independent
+of the hosted server and ISP filtering. Generate a password hash, put it in a
+`.env` file, then start the container:
+
+```sh
+read -rsp 'Tracker password: ' TRACKER_PASSWORD; echo
+printf 'TOKU_PASSWORD_HASH=%s\n' "$(docker run --rm php:8.4-cli php -r 'echo password_hash($argv[1], PASSWORD_DEFAULT);' "$TRACKER_PASSWORD")" > .env
+unset TRACKER_PASSWORD
+docker compose up --build -d
+```
+
+Open http://127.0.0.1:8080. Progress is stored in the named `toku-data`
+volume and survives container updates. Stop it with `docker compose down`; do
+not add `-v` unless you intend to remove the local database.
+
 PHP's development server binds to localhost. Use Apache/PHP for production.
 See [Hetzner deployment](deploy/README.md) for the inspected Debian server and
 the prepared Apache configuration for a `/toku` deployment.

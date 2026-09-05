@@ -1,0 +1,10 @@
+.git
+.gitignore
+data
+review
+tests/__pycache__
+*.db
+*.db-wal
+*.db-shm
+config.local.php
+vendor
