@@ -31,13 +31,10 @@ the app refuses access; there is no default password or anonymous bypass.
 ### Local Docker copy
 
 Docker keeps the app and its SQLite database local to this machine, independent
-of the hosted server and ISP filtering. Generate a password hash, put it in a
-`.env` file, then start the container:
+of the hosted server and ISP filtering. The local container is passwordless and
+binds only to localhost:
 
 ```sh
-read -rsp 'Tracker password: ' TRACKER_PASSWORD; echo
-printf 'TOKU_PASSWORD_HASH=%s\n' "$(docker run --rm php:8.4-cli php -r 'echo password_hash($argv[1], PASSWORD_DEFAULT);' "$TRACKER_PASSWORD")" > .env
-unset TRACKER_PASSWORD
 docker compose up --build -d
 ```
 

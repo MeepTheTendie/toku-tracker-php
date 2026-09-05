@@ -15,6 +15,7 @@ function settings(): array {
     return [
         'database' => $get('TOKU_DB', $root . '/data/toku.db'),
         'password_hash' => (string) $get('TOKU_PASSWORD_HASH', ''),
+        'allow_anonymous' => $get('TOKU_ALLOW_ANONYMOUS', '0') === '1',
         'base' => $base,
         'secure' => $get('TOKU_HTTPS', '0') === '1' || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
     ];

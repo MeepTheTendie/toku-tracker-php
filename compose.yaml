@@ -4,7 +4,7 @@ services:
     ports:
       - "127.0.0.1:8080:80"
     environment:
-      TOKU_PASSWORD_HASH: ${TOKU_PASSWORD_HASH:?Set TOKU_PASSWORD_HASH in .env}
+      TOKU_ALLOW_ANONYMOUS: "1"
       TOKU_DB: /var/lib/toku-tracker/toku.db
       TOKU_BASE_PATH: ""
       TOKU_HTTPS: "0"

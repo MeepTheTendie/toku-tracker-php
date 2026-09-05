@@ -48,12 +48,12 @@ try {
         if ($isApi) respond(['error' => 'Method not allowed'], 405);
         http_response_code(405); echo 'Method not allowed'; exit;
     }
-    if ($config['password_hash'] === '') {
+    if ($config['password_hash'] === '' && !$config['allow_anonymous']) {
         http_response_code(503);
         echo 'Tracker setup is incomplete. The administrator must run bin/setup.php before signing in.';
         exit;
     }
-    $signedIn = Security::authenticated($config['password_hash']);
+    $signedIn = $config['allow_anonymous'] || Security::authenticated($config['password_hash']);
     if (!$signedIn && $path !== 'login') {
         if ($isApi) respond(['error' => 'Your session expired. Sign in again.'], 401);
         redirect('login');
