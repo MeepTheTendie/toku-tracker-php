@@ -1,0 +1,6 @@
+Options -Indexes -MultiViews
+Require all granted
+DirectoryIndex index.php
+RewriteEngine On
+RewriteRule ^assets/(app\.css|app\.js|favicon\.svg)$ - [END]
+RewriteRule ^ index.php [END]

@@ -1,50 +1,7 @@
-#!/bin/bash
-# Toku Tracker Launcher
-
-cd "$(dirname "$0")"
-
-echo "=============================================="
-echo "           ⚡ Toku Tracker PHP"
-echo "=============================================="
-echo ""
-
-# Check PHP
-if ! command -v php &> /dev/null; then
-    echo "Error: PHP is not installed"
-    exit 1
-fi
-
-PHP_VERSION=$(php -v | head -n 1 | cut -d " " -f 2 | cut -d "." -f 1,2)
-echo "PHP version: $PHP_VERSION"
-
-# Check required extensions
-MISSING=""
-
-if ! php -m | grep -q "pdo"; then
-    MISSING="$MISSING pdo"
-fi
-
-if ! php -m | grep -q "pdo_sqlite"; then
-    MISSING="$MISSING pdo_sqlite"
-fi
-
-if [ -n "$MISSING" ]; then
-    echo "Error: Missing required PHP extensions:$MISSING"
-    echo "Install them with your package manager:"
-    echo "  Ubuntu/Debian: sudo apt install php-sqlite3"
-    echo "  Arch: sudo pacman -S php-sqlite"
-    exit 1
-fi
-
-echo "Required extensions: OK"
-echo ""
-echo "Data folder: $(pwd)/data"
-echo "Cache folder: $(pwd)/cache"
-echo ""
-echo "----------------------------------------------"
-echo "Starting server on http://localhost:8080"
-echo "Press Ctrl+C to stop"
-echo "=============================================="
-echo ""
-
-php -S localhost:8080 index.php
+#!/usr/bin/env bash
+set -euo pipefail
+cd -- "$(dirname -- "$0")"
+PHP_BIN="${PHP_BIN:-php}"
+"$PHP_BIN" -r 'if (!extension_loaded("pdo_sqlite")) {fwrite(STDERR, "Install PHP pdo_sqlite first.\n"); exit(1);}'
+printf 'Toku Tracker: http://127.0.0.1:8080\n'
+exec "$PHP_BIN" -S 127.0.0.1:8080 -t public public/router.php
