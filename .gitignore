@@ -1,11 +1,15 @@
-# Database (auto-generated on deploy)
-data/*.db
-
-# Cache
-cache/*
-!cache/.gitkeep
-
-# Local dev
+/data/
+/var/
+/cache/
+/vendor/
+/config.local.php
+/.phpunit.cache/
+*.db
+*.db-wal
+*.db-shm
+*.log
+.env
 .vscode/
 .idea/
-*.log
+__pycache__/
+/review/

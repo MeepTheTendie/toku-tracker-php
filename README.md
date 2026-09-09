@@ -1,174 +1,141 @@
-# Toku Tracker PHP - Complete Edition
+# Toku Tracker
 
-A comprehensive tokusatsu episode tracker with **170+ series** covering Kamen Rider, Super Sentai, Ultraman, Metal Hero, and GARO. Built with vanilla PHP and SQLite for maximum simplicity and speed.
+A private tokusatsu watch journal built with PHP 8.2+ and SQLite. No JavaScript
+framework, build step, Composer installation, or runtime packages are required.
 
-## 📊 Database Stats
+- Shared responsive layout for dashboard, library, series, episode tracking,
+  search, and statistics.
+- Kamen Rider, Super Sentai, Ultraman, Metal Hero, and GARO catalog.
+- Franchise, era, status, name, and tag filtering.
+- Individual and bulk watch tracking, first-unwatched navigation, and history export.
+- Private password login, CSRF protection, login throttling, and strict CSP.
+- Stable catalog IDs and automatic legacy migration that preserve watch history.
 
-| Franchise | Series | Episodes |
-|-----------|--------|----------|
-| 🦗 Kamen Rider | 38 | 2,000+ |
-| 🦖 Super Sentai | 49 | 2,400+ |
-| ✨ Ultraman | 27 | 900+ |
-| 🤖 Metal Hero | 17 | 800+ |
-| 🐺 GARO | 15+ | 200+ |
-| **Total** | **~170** | **~6,300** |
+This is intentionally a **single-owner tracker**. Everyone who knows the tracker
+password accesses the same journal. Sessions last up to 12 hours; changing the
+password invalidates existing sessions. There is no public registration.
 
-## ✨ Features
+## Local start
 
-### Core
-- **Dashboard** with overall progress and per-franchise breakdown
-- **Series browser** with franchise/era/status filters
-- **Episode tracking** with visual progress grid
-- **"Continue Watching"** recommendations
-- **Search** by name, tags, or era
-- **Statistics page** with detailed breakdowns
+Install PHP 8.2+ with PDO SQLite and sessions, then:
 
-### Series Data Includes
-- All 38 Kamen Rider series (Showa through Reiwa)
-- All 49 Super Sentai teams
-- 27+ Ultraman series (including New Generation)
-- 17 Metal Hero shows
-- GARO live-action seasons
-
-### Tags for Discovery
-Series are tagged with:
-- **Themes**: `dinosaurs`, `ninja`, `magic`, `space`, `cyber`, `trains`
-- **Tones**: `dark`, `mature`, `comedy`, `violent`
-- **Types**: `tribute`, `anniversary`, `movie`, `ongoing`
-- **Eras**: `showa`, `heisei`, `reiwa`
-
-## 🚀 Quick Start
-
-```bash
-cd toku-tracker-php
+```sh
+php bin/setup.php
 ./launch.sh
 ```
 
-Open http://localhost:8080
+Open http://127.0.0.1:8080. Setup prompts securely for a new tracker password and
+stores only its hash in ignored `config.local.php`. Without a configured hash,
+the app refuses access; there is no default password or anonymous bypass.
 
-### Requirements
-- PHP 8.0+
-- `pdo_sqlite` extension
+### Local Docker copy
 
-## 📱 Pages
+Docker keeps the app and its SQLite database local to this machine, independent
+of the hosted server and ISP filtering. The local container is passwordless and
+binds only to localhost:
 
-| Page | URL | Description |
-|------|-----|-------------|
-| Dashboard | `/` | Stats, progress ring, continue watching |
-| Series | `/series` | Browse all with filters |
-| Filtered | `/series?franchise=kamen_rider` | By franchise |
-| Watching | `/series?filter=watching` | In progress |
-| Search | `/search?q=keyword` | Search by name/tag |
-| Detail | `/series-detail?id=1` | Series with episode grid |
-| Watch | `/watch?id=1&episode=5` | Episode tracker page |
-| Stats | `/stats` | Detailed statistics |
-
-## 🎮 Keyboard Shortcuts (Watch Page)
-
-| Key | Action |
-|-----|--------|
-| `←` | Previous episode |
-| `→` | Next episode |
-| `Space` / `W` | Mark watched/unwatched |
-
-## 🔌 API Endpoints
-
-```bash
-# Watch/unwatch single episode
-POST /api/watch
-{
-    "series_id": 1,
-    "episode": 5,
-    "action": "watch" | "unwatch"
-}
-
-# Bulk operations
-POST /api/bulk
-{
-    "series_id": 1,
-    "action": "watch_all" | "unwatch_all"
-}
+```sh
+docker compose up --build -d
 ```
 
-## 🗂️ Project Structure
+Open http://127.0.0.1:8080. Progress is stored in the named `toku-data`
+volume and survives container updates. Stop it with `docker compose down`; do
+not add `-v` unless you intend to remove the local database.
 
-```
-toku-tracker-php/
-├── index.php              # Router
-├── config.php             # Full 170+ series database
-├── launch.sh              # Dev server
-├── lib/
-│   ├── Database.php       # SQLite setup with indexing
-│   └── TokuTracker.php    # Business logic + search
-├── templates/
-│   ├── dashboard.php      # Stats & progress ring
-│   ├── series.php         # Filterable grid
-│   ├── series_detail.php  # Episode grid
-│   ├── watch.php          # Tracking interface
-│   ├── search.php         # Search results
-│   └── stats.php          # Detailed stats
-├── api/
-│   ├── watch.php          # Episode tracking
-│   └── bulk.php           # Bulk operations
-└── data/                  # SQLite database (auto-created)
+PHP's development server binds to localhost. Use Apache/PHP for production.
+See [Hetzner deployment](deploy/README.md) for the inspected Debian server and
+the prepared Apache configuration for a `/toku` deployment.
+
+## Project layout
+
+```text
+app/           Database, security, request helpers, shared templates
+public/        Only web-accessible files: entry point, CSS, JavaScript
+catalog/       Series metadata with permanent keys
+bin/           Secure password setup and SQLite backup commands
+data/          Private SQLite storage (created automatically, ignored by Git)
+tests/         Isolated database and HTTP regression checks
+deploy/        Apache configuration and deployment/rollback instructions
 ```
 
-## 🎯 Search Examples
+Only `public/` belongs in the web root. The root `.htaccess` denies access as a
+fallback if the whole checkout is accidentally exposed.
 
-- `"Kamen Rider"` - All Rider series
-- `"dinosaurs"` - Abaranger, Kyoryuger, Ryusoulger
-- `"dark"` - Amazon, Shin, Nexus, Metalder
-- `"anniversary"` - Decade, Gokaiger, Zenkaiger
-- `"Heisei"` - Era filter
-- `"tribute"` - Tribute seasons
+## Configuration
 
-## 💾 Database
+Copy `config.example.php` to `config.local.php`, or use environment variables:
 
-SQLite auto-creates at `data/toku.db` on first run with:
-- Series table with tags (JSON)
-- Episodes table (auto-generated per series)
-- Watched tracking table
-- Full-text search via LIKE on tags
+| Setting | Purpose |
+| --- | --- |
+| `TOKU_PASSWORD_HASH` | Required hash generated by `password_hash()` |
+| `TOKU_DB` | Absolute SQLite path; defaults to `data/toku.db` |
+| `TOKU_BASE_PATH` | Empty for root hosting; `/toku` for a subdirectory |
+| `TOKU_HTTPS` | `1` to enforce secure cookies behind your own HTTPS proxy |
 
-### Reset Database
+Environment values override the local file. HTTPS is also detected directly from
+the web server; forwarded client headers are never trusted automatically.
+For the development server, set `TOKU_BASE_PATH` in the environment if testing a
+subdirectory so its asset router uses the same prefix.
 
-```php
-require_once 'lib/Database.php';
-Database::reset();
+## Existing installations and catalog changes
+
+Preserve the original `data/toku.db` and make a backup before upgrading.
+The migration adopts existing rows by franchise/name, preserves their numeric
+IDs and watched timestamps, and assigns permanent catalog keys. It also saves
+a consistent pre-migration SQLite backup. All five franchises are enabled.
+
+Edit `catalog/series.php` to maintain metadata. **Never change an existing key
+when renaming a series.** New series and episode-count changes synchronize
+automatically. Removed catalog entries remain in the database. When a count
+shrinks, out-of-range watch history is retained for recovery but excluded from
+current progress. This release carries forward the original catalog metadata;
+it is not a fact-checked or automatically refreshed episode guide.
+
+## Backups
+
+```sh
+php bin/backup.php /private/existing-directory/toku-backup.db
 ```
 
-## 🌟 Why PHP Works Here
+This creates a consistent SQLite backup without overwriting an existing file.
+Statistics → Export downloads watched episodes, stable catalog keys, and
+timestamps as JSON. Restore instructions are in the deployment guide.
 
-1. **Zero build step** - Instant changes
-2. **Single SQLite file** - No database server
-3. **170 series = ~0.5MB data** - Loads instantly
-4. **Shared-nothing** - Each request isolated
-5. **Drop-in deploy** - Any PHP host
+## Tests
 
-Compare to Node/React:
-- No `node_modules`
-- No webpack/Vite
-- No hydration
-- No state management complexity
-
-## 📝 Adding Series
-
-Edit `FULL_SERIES_DATABASE` in `config.php`:
-
-```php
-['franchise' => 'kamen_rider', 'name' => 'New Rider', 'era' => 'Reiwa', 'year' => 2026, 'episodes' => 50, 'tags' => ['tag1', 'tag2']],
+```sh
+php tests/run.php
+python3 tests/http_test.py
 ```
 
-Delete `data/toku.db` to regenerate with new data.
+The tests use disposable databases and a temporary localhost server, never your
+journal. Set `PHP_BIN` to select a different PHP binary for HTTP tests.
 
-## 🎨 Customization
+Coverage includes legacy migration, catalog changes, duplicate and bulk watches,
+episode validation, write failures, backups, search, authentication, CSRF,
+private-file routing, XSS regression, and root/subdirectory deployments.
 
-Franchise colors in `FRANCHISES`:
-```php
-'kamen_rider' => ['color' => '#00a8ff', 'icon' => '🦗'],
-'super_sentai' => ['color' => '#e74c3c', 'icon' => '🦖'],
+Optional real-browser checks use Chromium and `playwright-core`, installed
+outside the application:
+
+```sh
+npm install --prefix /tmp/toku-browser-tests playwright-core
+PLAYWRIGHT_MODULE=/tmp/toku-browser-tests/node_modules/playwright-core node tests/browser.cjs
 ```
 
-## License
+Set `PHP_BIN` and `CHROMIUM_BIN` if needed. The browser suite temporarily uses
+localhost port 18764, checks failed-save recovery and mobile overflow, and saves
+desktop/mobile screenshots in ignored `review/`.
 
-MIT - Build your ultimate toku watchlist! 📺⚡
+## API
+
+Authenticated requests must include the session cookie and CSRF token from the
+page in `X-CSRF-Token`. Send JSON with `Content-Type: application/json`:
+
+- `POST /api/watch`: `series_id`, `episode`, `action` (`watch` or `unwatch`).
+- `POST /api/bulk`: `series_id`, `action` (`watch_all` or `unwatch_all`).
+
+Responses use meaningful HTTP status codes and `success: true` only after a
+successful database operation. Native forms also work without JavaScript.
+
+MIT license.
