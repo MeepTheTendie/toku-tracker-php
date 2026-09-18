@@ -87,9 +87,12 @@ final class Store {
                 } else {
                     $this->query('UPDATE series SET franchise=?,name=?,era=?,year=?,episodes=?,tags=?,catalog_key=? WHERE id=?', [...$values, $id]);
                 }
-                for ($ep = 1; $ep <= $row['episodes']; $ep++) {
-                    $this->query('INSERT OR IGNORE INTO episodes (series_id,episode_number,title) VALUES (?,?,?)', [$id, $ep, "Episode $ep"]);
-                }
+                // One statement per series instead of one per episode. CAST keeps the
+                // recursion bound numeric: PDO binds parameters as text by default and
+                // SQLite treats an integer as less than any text.
+                $this->query('WITH RECURSIVE seq(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM seq WHERE n < CAST(? AS INTEGER))
+                    INSERT OR IGNORE INTO episodes (series_id,episode_number,title)
+                    SELECT ?, n, \'Episode \' || n FROM seq', [$row['episodes'], $id]);
             }
             // Removed catalog entries stay intact: history is never implicitly deleted.
             $this->query("INSERT INTO metadata (key,value) VALUES ('catalog_hash',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", [$hash]);
@@ -103,9 +106,17 @@ final class Store {
     }
 
     public function series(array $filters = []): array {
+        return array_values($this->mapSeries($this->seriesRows($filters)));
+    }
+
+    private function seriesRows(array $filters): array {
+        $status = $filters['filter'] ?? '';
+        if ($status !== '' && !in_array($status, ['watching', 'completed', 'unwatched'], true)) return [];
+
         $sql = 'SELECT s.*, COUNT(w.id) AS watched, MAX(w.watched_at) AS last_watched FROM series s
             LEFT JOIN watched w ON w.series_id=s.id AND w.episode_number BETWEEN 1 AND s.episodes WHERE s.enabled=1';
         $params = [];
+        if (($filters['id'] ?? null) !== null) { $sql .= ' AND s.id=?'; $params[] = (int) $filters['id']; }
         foreach (['franchise', 'era'] as $field) {
             if (($filters[$field] ?? '') !== '') { $sql .= " AND s.$field=?"; $params[] = $filters[$field]; }
         }
@@ -114,21 +125,30 @@ final class Store {
             $sql .= " AND (s.name LIKE ? ESCAPE '\' OR s.tags LIKE ? ESCAPE '\' OR s.era LIKE ? ESCAPE '\')";
             array_push($params, $term, $term, $term);
         }
-        $sql .= ' GROUP BY s.id ORDER BY s.year DESC, s.name';
-        $rows = $this->query($sql, $params)->fetchAll();
-        $rows = array_map(static function (array $s): array {
+        $sql .= ' GROUP BY s.id';
+        if ($status !== '') {
+            // Filtering the derived status in SQL avoids loading every row and discarding in PHP.
+            $sql .= " HAVING (CASE WHEN COUNT(w.id) >= s.episodes THEN 'completed'
+                WHEN COUNT(w.id) > 0 THEN 'watching' ELSE 'unwatched' END) = ?";
+            $params[] = $status;
+        }
+        $sql .= ' ORDER BY s.year DESC, s.name';
+        return $this->query($sql, $params)->fetchAll();
+    }
+
+    private function mapSeries(array $rows): array {
+        return array_map(static function (array $s): array {
             $s['watched'] = (int) $s['watched'];
             $s['progress'] = $s['episodes'] ? round(100 * $s['watched'] / $s['episodes']) : 0;
             $s['status'] = $s['watched'] >= $s['episodes'] ? 'completed' : ($s['watched'] ? 'watching' : 'unwatched');
             $s['tags'] = json_decode($s['tags'] ?: '[]', true, 512, JSON_THROW_ON_ERROR);
             return $s;
         }, $rows);
-        return array_values(array_filter($rows, static fn($s) => empty($filters['filter']) || $s['status'] === $filters['filter']));
     }
 
     public function detail(int $id): ?array {
-        $rows = array_filter($this->series(), static fn($s) => (int) $s['id'] === $id);
-        $s = reset($rows);
+        $rows = $this->mapSeries($this->seriesRows(['id' => $id]));
+        $s = $rows[0] ?? null;
         if (!$s) return null;
         $s['episodes_list'] = $this->query('SELECT e.episode_number,e.title,w.watched_at,
             CASE WHEN w.id IS NULL THEN 0 ELSE 1 END AS is_watched FROM episodes e

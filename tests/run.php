@@ -77,6 +77,16 @@ try {
     $full = new Store($dir.'/catalog.db',require dirname(__DIR__).'/catalog/series.php');
     check(count($full->series(['franchise'=>'ultraman']))>0,'Full catalog enables Ultraman');
     check(count($full->series())===count(require dirname(__DIR__).'/catalog/series.php'),'Every catalog entry seeds once');
+    check($store->detail(9999)===null,'Missing series returns null');
+    check($store->series(['filter'=>'bogus'])===[],'Unknown status filter returns nothing');
+    $big = new Store($dir.'/big.db',[['key'=>'big','franchise'=>'kamen_rider','name'=>'Big Rider','era'=>'Reiwa','year'=>2021,'episodes'=>1000,'tags'=>[]]]);
+    $bigId=(int)$big->series()[0]['id'];
+    check(count($big->detail($bigId)['episodes_list'])===1000,'Large episode list seeds fully');
+    check($big->detail($bigId)['next_episode']===1,'Large series starts at first episode');
+    $big->change($bigId,'watch',500);
+    check($big->detail($bigId)['next_episode']===1,'Large series finds first gap');
+    check(count($big->series(['filter'=>'watching']))===1,'Large series status filter in SQL');
+    check($big->detail($bigId)['id']===$bigId,'Detail returns the requested series only');
     check(h('<script>')==='&lt;script&gt;','HTML escaping');
     $_SESSION=['csrf'=>'test']; check(Security::csrf('test')&&!Security::csrf(['test'])&&!Security::csrf('bad'),'CSRF validation');
     echo "$count checks passed.\n";
